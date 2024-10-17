@@ -1,4 +1,4 @@
-import Vapor
+@preconcurrency import Vapor
 import Foundation
 
 struct ViteManifestLoader {
