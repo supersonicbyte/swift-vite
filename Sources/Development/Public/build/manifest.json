@@ -1,0 +1,11 @@
+{
+  "src/main.js": {
+    "file": "assets/main-D-_Dv4BI.js",
+    "name": "main",
+    "src": "src/main.js",
+    "isEntry": true,
+    "css": [
+      "assets/main-C0XbBy_3.css"
+    ]
+  }
+}
