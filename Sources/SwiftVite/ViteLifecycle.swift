@@ -8,7 +8,7 @@ public struct ViteLifecycle: LifecycleHandler {
     }
     
     public func didBoot(_ application: Application) throws {
-        let buildDirectoryURL = URL(fileURLWithPath: application.directory.publicDirectory + "/" + buildDirectory)
+        let buildDirectoryURL = URL(fileURLWithPath: application.directory.publicDirectory + buildDirectory)
         let manifestURL = buildDirectoryURL.appending(component: "manifest.json")
         
         application.vite.withManifestURL({ $0 = manifestURL })

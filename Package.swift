@@ -29,7 +29,8 @@ let package = Package(
         .target(
             name: "SwiftVite",
             dependencies: [
-                .product(name: "Vapor", package: "Vapor")
+                .product(name: "Vapor", package: "Vapor"),
+                .product(name: "Leaf", package: "Leaf")
             ]
         ),
         .testTarget(
@@ -44,7 +45,8 @@ let package = Package(
                 .product(name: "Leaf", package: "Leaf"),
                 .product(name: "Fluent", package: "Fluent"),
                 .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver")
-            ]
+            ],
+            resources: [.copy("Public"), .copy("Resources")]
         )
     ]
 )
