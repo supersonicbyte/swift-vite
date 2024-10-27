@@ -1,18 +1,49 @@
 public struct Vite {
-    public let manifest: ViteManifest
-    public let buildDirectory: String
-    
-    public init(manifest: ViteManifest, buildDirectory: String) {
-        self.manifest = manifest
-        self.buildDirectory = buildDirectory
-    }
-    
-    public func makeTag(forEntryPoint entryPoint: String) throws -> String {
-        guard let entry = manifest[entryPoint] else {
-            throw ViteError.noResource(entryPoint)
+    public struct Environment {
+        let resolvedEntryPoints: (_ entryPoints: [String]) -> [String]
+        let renderTags: (_ entryPoint: String, _ vite: Vite) throws -> String
+        
+        public static var development: Environment {
+            .init { entryPoints in
+                return ["@vite/client"] + entryPoints
+            } renderTags: { entryPoint, vite in
+                return vite.makeTag(forURL: "http://localhost:5173/" + entryPoint)
+            }
         }
         
-        return makeTag(forEntry: entry)
+        public static var production: Environment {
+            .init { entryPoints in
+                return entryPoints
+            } renderTags: { entryPoint, vite in
+                guard let entry = vite.manifest[entryPoint] else {
+                    throw ViteError.noResource(entryPoint)
+                }
+                
+                return vite.makeTag(forEntry: entry)
+            }
+        }
+    }
+    
+    public let manifest: ViteManifest
+    public let buildDirectory: String
+    public let environment: Environment
+    
+    public init(manifest: ViteManifest, buildDirectory: String, environment: Environment) {
+        self.manifest = manifest
+        self.buildDirectory = buildDirectory
+        self.environment = environment
+    }
+    
+    public func tags(forEntryPoints entryPoints: [String]) throws -> String {
+        let resolvedEntryPoints = environment.resolvedEntryPoints(entryPoints)
+        return try resolvedEntryPoints.reduce(into: [String]()) { renderedTags, entryPoint in
+            renderedTags.append(try environment.renderTags(entryPoint, self))
+        }
+        .joined(separator: "\n")
+    }
+    
+    public func tags(forEntryPoint entryPoint: String) throws -> String {
+        return try tags(forEntryPoints: [entryPoint])
     }
     
     private func isCssFile(atPath path: String) -> Bool {
@@ -20,10 +51,14 @@ public struct Vite {
     }
     
     private func makeTag(forEntry entry: ViteManifestEntry) -> String {
-        if isCssFile(atPath: entry.file) {
-            return makeCssTag(forPath: buildDirectory + "/" + entry.file)
+        return makeTag(forURL: buildDirectory + "/" + entry.file)
+    }
+    
+    private func makeTag(forURL url: String) -> String {
+        if isCssFile(atPath: url) {
+            return makeCssTag(forPath: url)
         } else {
-            return makeJsTag(forPath: buildDirectory + "/" + entry.file)
+            return makeJsTag(forPath: url)
         }
     }
     
