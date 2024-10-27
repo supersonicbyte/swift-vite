@@ -3,7 +3,7 @@ import Leaf
 
 enum ViteTagError: Error {
     case invalidResourceParameter
-    case noResource(String)
+    case underlyingError(Error)
 }
 
 struct ViteTag: UnsafeUnescapedLeafTag {
@@ -21,35 +21,14 @@ struct ViteTag: UnsafeUnescapedLeafTag {
         }
         
         let viteManifest = ctx.viteManifest
-        guard let entry = viteManifest[resourceString] else {
-            throw ViteTagError.noResource(resourceString)
-        }
         
-        return .string(makeTag(forEntry: entry))
-    }
-    
-    private func isCssFile(atPath path: String) -> Bool {
-        return path.hasSuffix(".css")
-    }
-    
-    private func makeTag(forEntry entry: ViteManifestEntry) -> String {
-        if isCssFile(atPath: entry.file) {
-            return makeCssTag(forPath: buildDirectory + "/" + entry.file)
-        } else {
-            return makeJsTag(forPath: buildDirectory + "/" + entry.file)
+        let vite = Vite(manifest: viteManifest, buildDirectory: buildDirectory)
+        
+        do {
+            return .string(try vite.makeTag(forEntryPoint: resourceString))
+        } catch {
+            throw ViteTagError.underlyingError(error)
         }
-    }
-    
-    private func makeCssTag(forPath path: String) -> String {
-        return """
-        <link rel="stylesheet" href="\(path)">
-        """
-    }
-    
-    private func makeJsTag(forPath path: String) -> String {
-        return """
-        <script type="module" src="\(path)"></script>
-        """
     }
 }
 
