@@ -35,7 +35,10 @@ let package = Package(
         ),
         .testTarget(
             name: "SwiftViteTests",
-            dependencies: ["SwiftVite"]
+            dependencies: [
+                "SwiftVite",
+                .product(name: "XCTVapor", package: "vapor"),
+            ]
         ),
         .executableTarget(
             name: "Development",
