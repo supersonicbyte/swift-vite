@@ -1,10 +1,10 @@
 public struct Vite {
     public struct Environment {
-        let resolvedEntryPoints: (_ entryPoints: [String]) -> [String]
-        let renderTags: (_ entryPoint: String, _ vite: Vite) throws -> String
+        let resolvedEntryPoints: (_ entryPoints: [String], _ vite: Vite) throws -> [String]
+        let renderTags: (_ entryPoint: String, _ vite: Vite) -> String
         
         public static var development: Environment {
-            .init { entryPoints in
+            .init { entryPoints, _ in
                 return ["@vite/client"] + entryPoints
             } renderTags: { entryPoint, vite in
                 return vite.makeTag(forURL: "http://localhost:5173/" + entryPoint)
@@ -12,14 +12,31 @@ public struct Vite {
         }
         
         public static var production: Environment {
-            .init { entryPoints in
-                return entryPoints
-            } renderTags: { entryPoint, vite in
-                guard let entry = vite.manifest[entryPoint] else {
-                    throw ViteError.noResource(entryPoint)
+            .init { entryPoints, vite in
+                var stylesheets = [String]()
+                var modules = [String]()
+                
+                try entryPoints.forEach { entryPoint in
+                    guard let entry = vite.manifest[entryPoint] else {
+                        throw ViteError.noResource(entryPoint)
+                    }
+                    
+                    stylesheets.append(contentsOf: entry.css.map { vite.buildDirectory + "/" + $0 })
+                    
+                    try entry.imports.forEach { `import` in
+                        guard let importEntry = vite.manifest[`import`] else {
+                            throw ViteError.noResource(`import`)
+                        }
+                        
+                        stylesheets.append(contentsOf: importEntry.css.map { vite.buildDirectory + "/" + $0 })
+                    }
+                    
+                    modules.append(vite.buildDirectory + "/" + entry.file)
                 }
                 
-                return vite.makeTag(forEntry: entry)
+                return Array(stylesheets.uniqued()) + Array(modules.uniqued())
+            } renderTags: { entryPoint, vite in
+                return vite.makeTag(forURL: entryPoint)
             }
         }
     }
@@ -35,9 +52,9 @@ public struct Vite {
     }
     
     public func tags(forEntryPoints entryPoints: [String]) throws -> String {
-        let resolvedEntryPoints = environment.resolvedEntryPoints(entryPoints)
-        return try resolvedEntryPoints.reduce(into: [String]()) { renderedTags, entryPoint in
-            renderedTags.append(try environment.renderTags(entryPoint, self))
+        let resolvedEntryPoints = try environment.resolvedEntryPoints(entryPoints, self)
+        return resolvedEntryPoints.reduce(into: [String]()) { renderedTags, entryPoint in
+            renderedTags.append(environment.renderTags(entryPoint, self))
         }
         .joined(separator: "\n")
     }
