@@ -13,7 +13,7 @@ public struct ViteLifecycle: LifecycleHandler {
         
         application.vite.withManifestURL({ $0 = manifestURL })
         
-        _ = application.vite.loader.load()
+        _ = application.vite.loader.load(application.eventLoopGroup.next())
         
         application.middleware.use(ViteManifestLoadingMiddleware(), at: .beginning)
         

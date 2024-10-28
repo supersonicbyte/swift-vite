@@ -6,7 +6,7 @@ struct ViteManifestLoadingMiddleware: Middleware {
             return next.respond(to: request)
         }
         
-        return request.application.vite.loader.load()
+        return request.application.vite.loader.load(request.eventLoop)
             .map({ manifest in
                 request.application.vite.withManifest({ $0 = manifest })
             })

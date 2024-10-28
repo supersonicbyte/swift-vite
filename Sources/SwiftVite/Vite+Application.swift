@@ -48,14 +48,25 @@ extension Application {
         }
         
         var loader: ViteManifestLoader {
-            if app.environment == .development {
-                return .loading(fromManifestURL: withManifestURL({ $0 }), application: app)
+            get {
+                app.locks.lock(for: ViteStorageLock.self).withLock {
+                    if let loader = storage.loader { return loader }
+                    
+                    if app.environment == .development {
+                        return ViteManifestLoader.loading(fromManifestURL: withManifestURL({ $0 }), application: app)
+                    }
+                    
+                    return ViteManifestLoader.caching(
+                        in: app,
+                        base: .loading(fromManifestURL: withManifestURL({ $0 }), application: app)
+                    )
+                }
             }
-            
-            return .caching(
-                in: app,
-                base: .loading(fromManifestURL: withManifestURL({ $0 }), application: app)
-            )
+            nonmutating set {
+                app.locks.lock(for: ViteStorageLock.self).withLock {
+                    storage.loader = newValue
+                }
+            }
         }
     }
     
