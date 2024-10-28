@@ -21,6 +21,7 @@ struct LeafViteTests {
             
             var sources = StaticSource()
             sources.register(template: #"#vite("views/foo.js")"#, forName: "vite-tag")
+            sources.register(template: #"#vite("views/foo.js", "views/bar.js")"#, forName: "vite-tags")
                 
             app.leaf.sources = .singleSource(sources)
             
@@ -58,6 +59,20 @@ struct LeafViteTests {
             #expect(renderedTemplate == """
             <script type="module" src="http://localhost:5173/@vite/client"></script>
             <script type="module" src="http://localhost:5173/views/foo.js"></script>
+            """)
+        }
+    }
+    
+    @Test func renders_tags_for_multiple_entry_points() async throws {
+        try await withApp(environment: .production) { app in
+            let view = (try await app.view.render("vite-tags")).data
+            let renderedTemplate = view.getString(at: view.readerIndex, length: view.readableBytes) ?? ""
+            
+            #expect(renderedTemplate == """
+            <link rel="stylesheet" href="/build/assets/foo-5UjPuW-k.css">
+            <link rel="stylesheet" href="/build/assets/shared-ChJ_j-JJ.css">
+            <script type="module" src="/build/assets/foo-BRBmoGS9.js"></script>
+            <script type="module" src="/build/assets/bar-gkvgaI9m.js"></script>
             """)
         }
     }

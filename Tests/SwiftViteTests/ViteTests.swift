@@ -28,6 +28,20 @@ struct ViteTests {
             """)
         }
     }
+    
+    @Test func renders_tags_for_multiple_entry_points() async throws {
+        try await withManifest { manifest in
+            let vite = Vite(manifest: manifest, buildDirectory: "build", environment: .production)
+            let renderedTags = try vite.tags(forEntryPoints: ["views/foo.js", "views/bar.js"])
+            
+            #expect(renderedTags == """
+            <link rel="stylesheet" href="/build/assets/foo-5UjPuW-k.css">
+            <link rel="stylesheet" href="/build/assets/shared-ChJ_j-JJ.css">
+            <script type="module" src="/build/assets/foo-BRBmoGS9.js"></script>
+            <script type="module" src="/build/assets/bar-gkvgaI9m.js"></script>
+            """)
+        }
+    }
 }
 
 func withManifest(_ handler: (ViteManifest) async throws -> Void) async throws {

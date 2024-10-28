@@ -15,10 +15,12 @@ struct ViteTag: UnsafeUnescapedLeafTag {
     }
     
     func render(_ ctx: LeafKit.LeafContext) throws -> LeafKit.LeafData {
-        try ctx.requireParameterCount(1)
-        
-        guard let resourceString = ctx.parameters[0].string else {
-            throw ViteTagError.invalidResourceParameter
+        let entryPoints = try ctx.parameters.map { data in
+            guard let entryPoint = data.string else {
+                throw ViteTagError.invalidResourceParameter
+            }
+            
+            return entryPoint
         }
         
         let viteManifest = ctx.viteManifest
@@ -30,7 +32,7 @@ struct ViteTag: UnsafeUnescapedLeafTag {
         )
         
         do {
-            return .string(try vite.tags(forEntryPoint: resourceString))
+            return .string(try vite.tags(forEntryPoints: entryPoints))
         } catch {
             throw ViteTagError.underlyingError(error)
         }
