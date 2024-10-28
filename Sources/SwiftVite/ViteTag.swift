@@ -1,5 +1,6 @@
 #if canImport(Leaf)
 import Leaf
+import Vapor
 
 enum ViteTagError: Error {
     case invalidResourceParameter
@@ -37,12 +38,30 @@ struct ViteTag: UnsafeUnescapedLeafTag {
 }
 
 private extension LeafContext {
+    // This is to work around this bug in Leaf:
+    // https://github.com/vapor/leaf/pull/235
+    private var _application: Application? {
+        guard let value = userInfo["application"] else {
+            return nil
+        }
+        
+        if let app = value as? Application {
+            return app
+        }
+        
+        if let leaf = value as? Application.Leaf {
+            return leaf.application
+        }
+        
+        return nil
+    }
+    
     var viteManifest: ViteManifest {
-        return application?.vite.withManifest({ $0 }) ?? [:]
+        return _application?.vite.withManifest({ $0 }) ?? [:]
     }
     
     var viteEnvironment: Vite.Environment {
-        return application?.environment == .production
+        return _application?.environment == .production
             ? .production
             : .development
     }
