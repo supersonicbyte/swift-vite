@@ -13,6 +13,11 @@ public struct Vite {
         
         public static var production: Environment {
             .init { entryPoints, vite in
+                var buildDirectory = vite.buildDirectory
+                if !buildDirectory.hasPrefix("/") {
+                    buildDirectory = "/" + buildDirectory
+                }
+                
                 var stylesheets = [String]()
                 var modules = [String]()
                 
@@ -21,17 +26,17 @@ public struct Vite {
                         throw ViteError.noResource(entryPoint)
                     }
                     
-                    stylesheets.append(contentsOf: entry.css.map { vite.buildDirectory + "/" + $0 })
+                    stylesheets.append(contentsOf: entry.css.map { buildDirectory + "/" + $0 })
                     
                     try entry.imports.forEach { `import` in
                         guard let importEntry = vite.manifest[`import`] else {
                             throw ViteError.noResource(`import`)
                         }
                         
-                        stylesheets.append(contentsOf: importEntry.css.map { vite.buildDirectory + "/" + $0 })
+                        stylesheets.append(contentsOf: importEntry.css.map { buildDirectory + "/" + $0 })
                     }
                     
-                    modules.append(vite.buildDirectory + "/" + entry.file)
+                    modules.append(buildDirectory + "/" + entry.file)
                 }
                 
                 return Array(stylesheets.uniqued()) + Array(modules.uniqued())

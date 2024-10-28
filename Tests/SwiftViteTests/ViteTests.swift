@@ -44,9 +44,9 @@ struct ViteTests {
             let renderedTags = try vite.tags(forEntryPoint: "views/foo.js")
             
             #expect(renderedTags == """
-            <link rel="stylesheet" href="build/assets/foo-5UjPuW-k.css">
-            <link rel="stylesheet" href="build/assets/shared-ChJ_j-JJ.css">
-            <script type="module" src="build/assets/foo-BRBmoGS9.js"></script>
+            <link rel="stylesheet" href="/build/assets/foo-5UjPuW-k.css">
+            <link rel="stylesheet" href="/build/assets/shared-ChJ_j-JJ.css">
+            <script type="module" src="/build/assets/foo-BRBmoGS9.js"></script>
             """)
         }
     }
