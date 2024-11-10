@@ -53,12 +53,12 @@ extension Application {
                     if let loader = storage.loader { return loader }
                     
                     if app.environment == .development {
-                        return ViteManifestLoader.loading(fromManifestURL: withManifestURL({ $0 }), application: app)
+                        return ViteManifestLoader.loading(fromManifestURL: storage.manifestURL, application: app)
                     }
                     
                     return ViteManifestLoader.caching(
                         in: app,
-                        base: .loading(fromManifestURL: withManifestURL({ $0 }), application: app)
+                        base: .loading(fromManifestURL: storage.manifestURL, application: app)
                     )
                 }
             }
